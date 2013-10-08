@@ -37,9 +37,9 @@ class Node implements Comparable {
       System.out.println(content + " " + path);
 
     if (left != null)
-      left.printNode(path + '0');
+      left.printNode(path + '1');
     if (right != null)
-      right.printNode(path + '1');
+      right.printNode(path + '0');
     }
 
   public static void printTree(Node tree) {
@@ -53,7 +53,7 @@ class Encoder {
     int n, sum;
     int[] nums;
     double entropy;
-    int[] probabilities;
+    double[] probabilities;
     // int[] frequency;
     String fileName;
     TreeSet<Node> trees = new TreeSet<Node>();  // List containing all trees -- ordered
@@ -74,17 +74,16 @@ class Encoder {
     }
 
     // Compute probabilites
-    probabilities = new int[n];
-    for(int i = 0; i < probabilities.length; i++) {
-      probabilities[i] = nums[i];
-      // System.out.println("probs: " + probabilities[i]*10);
+    probabilities = new double[n];
+    for(int i = 0; i < n; i++) {
+      probabilities[i] = nums[i] / (sum*1.0);
+      System.out.println("probs: " + probabilities[i]);
     }
     
     // Build up the initial trees
-    for(int i = 0; i < 'Z'-'A'+1; i++) {
-        // System.out.println("@@: " + (int)(10*probabilities[i]));
-      if(probabilities[i] > 0) {
-        Node nde = new Node((char)('A'+i), probabilities[i]);
+    for(int i = 0; i < n; i++) {
+      if(nums[i] > 0) {
+        Node nde = new Node((char)('A'+i), nums[i]);
         trees.add(nde);
       }
     }
