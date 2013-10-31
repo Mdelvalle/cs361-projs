@@ -14,11 +14,7 @@ class Node implements Comparable {
     this.content  = content;
     this.value    = value;
   }
-/*  public Node(String strContent, int strValue) {
-    this.strContent = strContent;
-    this.strValue = strValue;
-  }
-*/
+
   public Node(Node left, Node right) {
     // Assumes that the left three is always the one that is lowest
     this.content  = (left.content < right.content) ? left.content : right.content;
@@ -63,9 +59,7 @@ class Node implements Comparable {
 
 class Encoder {
   public static void main(String[] args) throws IOException {
-    //
     // Globals
-    //
     int k, n, sum;
     int[] nums;
     double entropy;
@@ -74,17 +68,12 @@ class Encoder {
     TreeSet<Node> trees = new TreeSet<Node>();  // List containing all trees -- ordered
     char[] letter_array;
 
-
-    //
     // Initialization
-    //
     fileName = args[0];
-    BufferedReader br = new BufferedReader(new FileReader(fileName));
+    BufferedReader br = new BufferedReader
+                            (new FileReader(fileName));
 
-
-    //
     // Interpret/Store list of n non-negative integers
-    //
     k = Integer.parseInt(args[1]);
     n = 0;
     nums = new int[26];
@@ -93,23 +82,17 @@ class Encoder {
     for(int i = 0; (line = br.readLine()) != null; i++) {
       n++;
       nums[i] = Integer.parseInt(line);
+      //System.out.println("nums: " + nums[i]);
       sum += Integer.parseInt(line);
     }
 
-
-    //
     // Compute probabilites
-    //
     probabilities = new double[n];
     for(int i = 0; i < n; i++) {
       probabilities[i] = nums[i] / (sum*1.0);
+      //System.out.println("probs: " + probabilities[i]);
     }
     
-
-    //
-    // Fill letter_array with number of occurrences
-    // of each letter, in contiguous order
-    //
     letter_array = new char[sum];
     int j = 0;
     int idx = 0;
@@ -122,10 +105,7 @@ class Encoder {
       j = temp;
     }
 
-
-    //
     // Build up the initial trees
-    //
     for(int i = 0; i < n; i++) {
       if(nums[i] > 0) {
         Node nde = new Node((char)('A'+i), nums[i]);
@@ -133,10 +113,7 @@ class Encoder {
       }
     }
 
-
-    //
     // Huffman algorithm
-    //
     while(trees.size() > 1) {
       Node tree1 = (Node) trees.first();
       trees.remove(tree1);
@@ -147,10 +124,7 @@ class Encoder {
       trees.add(merged);
     }
 
-
-    //
     // Print the resulting tree
-    //
     if(trees.size() > 0) {
       Node theTree = (Node) trees.first();
       Node.printTree(theTree);
@@ -159,10 +133,8 @@ class Encoder {
       System.out.println("The file didn't contain useful characters.");
 
 
-    //
     // Write volume of text with expected probabilities
-    //
-    File file = new File("testText");
+     File file = new File("testText");
     if(!file.exists())
       file.createNewFile();
     
@@ -182,9 +154,7 @@ class Encoder {
     fw.close();
 
 
-    //
-    // Encode testText
-    //
+
     File file2 = new File("testText.enc1");
     if(!file2.exists())
       file2.createNewFile();
@@ -201,14 +171,7 @@ class Encoder {
     fw2.close();
 
 
-<<<<<<< HEAD
-     BufferedReader br3 = new BufferedReader(new FileReader(file2));
-=======
-    //
-    // Decode testText.enc1
-    //
     BufferedReader br3 = new BufferedReader(new FileReader(file2));
->>>>>>> e61b4c699af3c8ae408a418984cb699bb6476daf
 
     File file3 = new File("testText.dec1");
     if(!file3.exists())
@@ -222,26 +185,6 @@ class Encoder {
       bw3.write(Node.letter_decode.get(l));
     }
     bw3.close();
-<<<<<<< HEAD
-   
-
-    BufferedReader br4 = new BufferedReader(new FileReader(file2));
-
-    File file4 = new File("testText.enc2");
-    if(!file4.exists())
-      file4.createNewFile();
-    
-    FileWriter fw4 = new FileWriter(file4.getAbsoluteFile());
-    BufferedWriter bw4 = new BufferedWriter(fw4);
-
-    String l = null;
-    while((l = br3.readLine()) != null) {
-      bw3.write(Node.letter_decode.get(line));
-    }
-    bw3.close();
-   
-=======
     fw3.close();
->>>>>>> e61b4c699af3c8ae408a418984cb699bb6476daf
   }
 }
