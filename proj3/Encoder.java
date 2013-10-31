@@ -14,7 +14,11 @@ class Node implements Comparable {
     this.content  = content;
     this.value    = value;
   }
-
+/*  public Node(String strContent, int strValue) {
+    this.strContent = strContent;
+    this.strValue = strValue;
+  }
+*/
   public Node(Node left, Node right) {
     // Assumes that the left three is always the one that is lowest
     this.content  = (left.content < right.content) ? left.content : right.content;
@@ -172,7 +176,7 @@ class Encoder {
 
 
 
-    BufferedReader br3 = new BufferedReader(new FileReader(file2));
+     BufferedReader br3 = new BufferedReader(new FileReader(file2));
 
     File file3 = new File("testText.dec1");
     if(!file3.exists())
@@ -186,6 +190,22 @@ class Encoder {
       bw3.write(Node.letter_decode.get(line));
     }
     bw3.close();
+   
+
+    BufferedReader br4 = new BufferedReader(new FileReader(file2));
+
+    File file4 = new File("testText.enc2");
+    if(!file4.exists())
+      file4.createNewFile();
     
+    FileWriter fw4 = new FileWriter(file4.getAbsoluteFile());
+    BufferedWriter bw4 = new BufferedWriter(fw4);
+
+    String l = null;
+    while((l = br3.readLine()) != null) {
+      bw3.write(Node.letter_decode.get(line));
+    }
+    bw3.close();
+   
   }
 }
