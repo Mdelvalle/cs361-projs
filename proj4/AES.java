@@ -43,18 +43,22 @@ class AES {
     /* e */ 0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
     /* f */ 0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d };
 
-  private int[10][4] state;
 
-  private subBytes(int[][] ipt) {
-    for(int i = 0; i < 10; ++i) {
-      for(int j = 0; j < 4; ++j) {
-        state[i][j] = lT[ipt[i][j]];
+  private subBytes(int[][] s) {
+    int row_len = s.length;
+    int col_len = s[0].length;
+
+    for(int i = 0; i < row_len; ++i) {
+      for(int j = 0; j < col_len; ++j) {
+        int left = Integer.parseInt((Integer.toHexString(s[i][j] & 0xf0)).substring(0, 1), 16);
+        int right = Integer.parseInt(Integer.toHexString(s[i][j] & 0xf));
+        s[i][j] = lT[left][right];
       }
     }
   }
 
-  private shiftRows() {
-
+  private shiftRows(int [][] s) {
+    
   }
 
   private mixColumns() {
@@ -147,16 +151,17 @@ class AES {
      } // invMixColumn2
   }
 
-  private addRoundKey(int k) {
+  private addRoundKey(int[][] s, int[][] w) {
 
   }
 
+  /*/ MAIN /*/
   public static void main(String[] args) {
     // 128-bit input
-    final int[][] input = { 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x00, 0x00, 0x00 };
+    final int[] input = { 0x00, 0x00, 0x00, 0x00,
+                          0x00, 0x00, 0x00, 0x00,
+                          0x00, 0x00, 0x00, 0x00,
+                          0x00, 0x00, 0x00, 0x00 };
 
     // 128-bit key
     int cipherKey = 0x00000000000000000000000000000000;
@@ -164,7 +169,17 @@ class AES {
     // rounds / cycles
     final int rounds = 10;
 
-/*    File keyFile;
+    private int[4][rounds] state;
+
+    // Initialize state array
+    for(int i = 0; i < 4; ++i) {
+      for(int j = 0; j < rounds; ++j) {
+        state[i][j] = input[i + 4*j];
+      }
+    }
+
+
+/*  File keyFile;
     FileReader fR;
     BufferedReader bR;
 
@@ -172,10 +187,15 @@ class AES {
     BufferedWriter bW;
 */
 
-    for(int i = rounds; i > 0; --i) {
-      addRoundKey(i);
-      invShiftRows();
-      invSubBytes();
+    addRoundKey(state, /*round-key*/);
+    for(int i = rounds; i > 1; --i) {
+      subBytes(state);
+      shiftRows(state);
+      subBytes(state);
+      addRoundKey(state, /*round-key*/);
     }
+    subBytes(state);
+    shiftRows(state);
+    addRoundKey(state, /*round-key*/);
   }
 }
