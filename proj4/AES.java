@@ -2,7 +2,6 @@ import java.util.*;
 import java.io.*;
 
 class AES {
-
   // Look-up table
   private static final int[] lT = {
     //      0     1     2     3     4     5     6     7     8     9     a     b     c     d     e     f
@@ -44,7 +43,7 @@ class AES {
     /* f */ 0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d };
 
 
-  private subBytes(int[][] s) {
+  private void subBytes(int[][] s) {
     int row_len = s.length;
     int col_len = s[0].length;
 
@@ -57,11 +56,25 @@ class AES {
     }
   }
 
-  private shiftRows(int [][] s) {
-    
+  private void shift(int[] a, int offset) {
+    int len = a.length;
+    int temp = 0;
+    for(int i = 0; i < len; ++i) {
+
+    }
   }
 
-  private mixColumns() {
+  private void shiftRows(int[][] s) {
+    int row_len = s.length;
+    int col_len = s[0].length;
+    int offset = 1;
+
+    for(int i = 1; i < row_len; ++i) {
+        shift(s[i], offset);
+    }
+  }
+
+  private void mixColumns() {
   ////////////////////////  the mixColumns Tranformation ////////////////////////
 
     final static int[] LogTable = {
@@ -151,7 +164,8 @@ class AES {
      } // invMixColumn2
   }
 
-  private addRoundKey(int[][] s, int[][] w) {
+  // Recursively add round keys from state //
+  private void addRoundKey(int[][] s, int[][] w) {
 
   }
 
@@ -164,16 +178,19 @@ class AES {
                           0x00, 0x00, 0x00, 0x00 };
 
     // 128-bit key
-    int cipherKey = 0x00000000000000000000000000000000;
+    final int[] cipherKey = { 0x00, 0x00, 0x00, 0x00,
+                              0x00, 0x00, 0x00, 0x00,
+                              0x00, 0x00, 0x00, 0x00,
+                              0x00, 0x00, 0x00, 0x00 };
 
     // rounds / cycles
     final int rounds = 10;
 
-    private int[4][rounds] state;
+    int[][] state = new int[4][4];
 
     // Initialize state array
     for(int i = 0; i < 4; ++i) {
-      for(int j = 0; j < rounds; ++j) {
+      for(int j = 0; j < 4; ++j) {
         state[i][j] = input[i + 4*j];
       }
     }
