@@ -49,12 +49,24 @@ class AES {
 
     for(int i = 0; i < row_len; ++i) {
       for(int j = 0; j < col_len; ++j) {
-/*      int left = Integer.parseInt((Integer.toHexString(s[i][j] & 0xF0)).substring(0, 1), 16);
-        int right = Integer.parseInt(Integer.toHexString(s[i][j] & 0x0F));*/
 
         int left = s[i][j] / 16;
         int right = s[i][j] % 16;
         s[i][j] = lT[left][right];
+      }
+    }
+  }
+
+  private static void invSubBytes(int[][] s) {
+    int row_len = s.length;
+    int col_len = s[0].length;
+
+    for(int i = 0; i < row_len; ++i) {
+      for(int j = 0; j < col_len; ++j) {
+
+        int left = s[i][j] / 16;
+        int right = s[i][j] % 16;
+        s[i][j] = inverse_lT[left][right];
       }
     }
   }
@@ -73,6 +85,25 @@ class AES {
     for(int i = 0; i < row_len; ++i) {
         for(int j = 0; j < col_len; ++j) {
             a[i][j] = b[i][(j + offset) % 4];
+        }
+        ++offset;
+    }
+  }
+
+  private static void invShiftRows(int[][] a) {
+    int[][] b = new int[4][4];
+    int row_len = b.length;
+    int col_len = b[0].length;
+    int offset = 0;
+
+    for(int i = 0; i < row_len; ++i) {
+        for(int j = 0; j < col_len; ++j) {
+            b[i][j] = a[i][j];
+        }
+    }
+    for(int i = 0; i < row_len; ++i) {
+        for(int j = 0; j < col_len; ++j) {
+            a[i][(j + offset) % 4] = b[i][j];
         }
         ++offset;
     }
@@ -212,11 +243,6 @@ class AES {
         }
     }
 
-/*    private static void xor(int[][] a, int[] b, int[] c, int kcol, int rcon_col) {
-        for(int i = 0; i < 4; ++i) {
-            a[i][col] = b[i] ^ c[i] ^ Rcon[i][rcon_col];
-        }
-    }*/
     private static void xor(int[] a, int[] b, int[][] c, int col) {
         for(int i = 0; i < 4; ++i) {
             c[i][col] = a[i] ^ b[i];
@@ -262,30 +288,52 @@ class AES {
       }
     }
 
+    private static void printState(int[][] s) {
+        for(int i = 0; i < 4; ++i) {
+            for(int j = 0; j < 4; ++j) {
+                System.out.print(Integer.toHexString(s[i][j]) + " ");
+            }
+            System.out.println();
+        }
+    }
+
   /*********** 
   *** MAIN ***
   ***********/
-  public static void main(String[] args) {
-/*  File keyFile;
-    FileReader fR;
+  public static void main(String[] args) throws IOException {
+    String option;
+    String keyFile;
+    String inputFile;
     BufferedReader bR;
-
-    FileWriter fW;
     BufferedWriter bW;
-*/
 
+    option = args[0];
+    keyFile = args[1];
+    inputFile = args[2];
 
-    // 128-bit input
-    final int[] input = { 0x00, 0x00, 0x00, 0x00,
-                          0x00, 0x00, 0x00, 0x00,
-                          0x00, 0x00, 0x00, 0x00,
-                          0x00, 0x00, 0x00, 0x00 };
+    bR = new BufferedReader(new FileReader(keyFile));
 
-    // 128-bit key
-    final int[] cipherKey = { 0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00,
-                              0x00, 0x00, 0x00, 0x00 };
+    // Fill cipherKey from keyFile
+    final int[] cipherKey = new int[16];
+    String line = null;
+    for(int i = 0; (line = bR.readLine()) != null; ++i) {
+        if((line.length() > 32) || !line.matches("[0-9A-Fa-f]+"))
+            continue;
+        if(line.length() < 32) {
+            int diff = 32 - line.length();
+            while(diff > 0) {
+                line += "0";
+                --diff;
+            }
+        }
+        for (int j = 0; j < 32; j+=2) {
+            String temp = line.substring(j, j+2);
+            cipherKey[j/2] = Integer.parseInt(temp, 16);
+        }
+    }
+
+    // Fill input from inputFile
+    bR = new BufferedReader(new FileReader(inputFile));
 
     int[][] keySchedule = new int[4][44];
 
@@ -296,36 +344,110 @@ class AES {
       }
     }
 
-    keyExpansion(keySchedule);
-    for(int i = 0; i < 4; ++i) {
-      for(int j = 0; j < 44; ++j) {
-        System.out.print(Integer.toHexString(keySchedule[i][j]) + " ");
-      }
-      System.out.println();
+
+    if(option.equals("e")) {
+        final int[] input = new int[16];
+        line = null;
+        FileWriter writer = new FileWriter(inputFile + ".enc");
+        PrintWriter pW = new PrintWriter(writer);
+
+        for(int i = 0; (line = bR.readLine()) != null; ++i) {
+            if(i != 0)
+                pW.println();
+            if((line.length() > 32) || (line.length() < 32) || !line.matches("[0-9A-Fa-f]+"))
+                continue;
+            for (int j = 0; j < 32; j+=2) {
+                String temp = line.substring(j, j+2);
+                input[j/2] = Integer.parseInt(temp, 16);
+            }
+
+            keyExpansion(keySchedule);
+
+            // rounds / cycles
+            final int rounds = 10;
+
+            int[][] state = new int[4][4];
+
+            // Initialize state array
+            for(int m = 0; m < 4; ++m) {
+                for(int n = 0; n < 4; ++n) {
+                    state[m][n] = input[m + 4*n];
+                }
+            }
+
+            addRoundKey(state, keySchedule, 0);
+
+            for(int m = 1; m < rounds; ++m) {
+                subBytes(state);
+                shiftRows(state);
+                mixColumns(state);
+                addRoundKey(state, keySchedule, m*4);
+            }
+            subBytes(state);
+            shiftRows(state);
+            addRoundKey(state, keySchedule, rounds*4);
+
+            for(int m = 0; m < 4; ++m) {
+                for(int n = 0; n < 4; ++n) {
+                    pW.printf("%02x", state[n][m]);
+                }
+            }
+        }
+        pW.flush();
+        pW.close();
     }
 
-/*    // rounds / cycles
-    final int rounds = 10;
+    else if(option.equals("d")) {
+        final int[] input = new int[16];
+        line = null;
+        FileWriter writer = new FileWriter(inputFile + ".dec");
+        PrintWriter pW = new PrintWriter(writer);
 
-    int[][] state = new int[4][4];
+        for(int i = 0; (line = bR.readLine()) != null; ++i) {
+            if(i != 0)
+                pW.println();
+            if((line.length() > 32) || (line.length() < 32) || !line.matches("[0-9A-Fa-f]+"))
+                continue;
+            for (int j = 0; j < 32; j+=2) {
+                String temp = line.substring(j, j+2);
+                input[j/2] = Integer.parseInt(temp, 16);
+            }
 
-    // Initialize state array
-    for(int i = 0; i < 4; ++i) {
-      for(int j = 0; j < 4; ++j) {
-        state[i][j] = input[i + 4*j];
-      }
+            keyExpansion(keySchedule);
+
+
+            // rounds / cycles
+            final int rounds = 10;
+
+            int[][] state = new int[4][4];
+
+            // Initialize state array
+                for(int m = 0; m < 4; ++m) {
+                    for(int n = 0; n < 4; ++n) {
+                        state[m][n] = input[m + 4*n];
+                    }
+                }
+
+            addRoundKey(state, keySchedule, rounds*4);
+
+            for(int m = rounds-1; m > 0; --m) {
+                invShiftRows(state);
+                invSubBytes(state);
+                addRoundKey(state, keySchedule, m*4);
+                invMixColumns(state);
+            }
+            invShiftRows(state);
+            invSubBytes(state);
+            addRoundKey(state, keySchedule, 0);
+
+                for(int m = 0; m < 4; ++m) {
+                    for(int n = 0; n < 4; ++n) {
+                        pW.printf("%02x", state[n][m]);
+                    }
+                }
+        }
+        pW.flush();
+        pW.close();
     }
-
-
-    addRoundKey(state, keySchedule, 0);
-    for(int i = 1; i < rounds; ++i) {
-        subBytes(state);
-        shiftRows(state);
-        mixColumns(state);
-        addRoundKey(state, keySchedule, i*4);
-    }
-    subBytes(state);
-    shiftRows(state);
-    addRoundKey(state, keySchedule, rounds*4);*/
   }
 }
