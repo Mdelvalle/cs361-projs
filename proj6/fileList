@@ -1,0 +1,10 @@
+file1 user1 0755
+file2 user1 0700
+file3 user2 4655
+file4 user3 0750
+file5 user6 0567
+file6 user8 7777
+file7 user4 3075
+file8 user5 7007
+file9 user7 0705
+file10 user4 0000
